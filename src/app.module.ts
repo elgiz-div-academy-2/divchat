@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Ip, Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -6,6 +6,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ClsModule } from 'nestjs-cls';
+import { Request } from 'express';
+import { ScheduleModule } from '@nestjs/schedule';
+import { JobModule } from './jobs/job.module';
 
 @Module({
   imports: [
@@ -38,7 +43,19 @@ import { UserModule } from './modules/user/user.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
     }),
+    ScheduleModule.forRoot(),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true,
+        setup: (cls, req: Request) => {
+          cls.set('ip', req.ip);
+        },
+      },
+    }),
     UserModule,
+    AuthModule,
+    JobModule,
   ],
   controllers: [],
   providers: [AppService],
