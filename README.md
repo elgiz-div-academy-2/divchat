@@ -26,6 +26,10 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+##
+
+[Project Structure](https://excalidraw.com/#json=FDrpkcngWv5m1LTVUf7nG,42wslKJ1JifmgIFw8FtxjQ)
+
 ## Project setup
 
 ```bash
