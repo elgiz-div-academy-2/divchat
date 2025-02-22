@@ -1,8 +1,10 @@
 import { Body, Controller, Ip, Post, Req, Res } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, LoginWithFirebaseDto } from './dto/login.dto';
 import { Response } from 'express';
+import { Auth } from 'src/shared/decorators/auth.decorator';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -16,8 +18,19 @@ export class AuthController {
     res.json(result);
   }
 
+  @Post('firebase')
+  loginWithFirebase(@Body() body: LoginWithFirebaseDto) {
+    return this.authService.loginWithFirebase(body);
+  }
+
   @Post('register')
   register(@Body() body: RegisterDto) {
     return this.authService.register(body);
+  }
+
+  @Post('reset-password')
+  @Auth()
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body);
   }
 }

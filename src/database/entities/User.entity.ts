@@ -15,6 +15,7 @@ import { FollowEntity } from './Follow.entity';
 import { PostEntity } from './Post.entity';
 import { PostActionsEntity } from './PostAction.entity';
 import * as bcrypt from 'bcrypt';
+import { UserProvider } from 'src/shared/enums/user.enum';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -32,6 +33,12 @@ export class UserEntity extends BaseEntity {
 
   @Column()
   password: string;
+
+  @Column({ type: 'enum', enum: UserProvider, default: UserProvider.LOCAL })
+  provider: UserProvider;
+
+  @Column({ nullable: true })
+  providerId: string;
 
   @Column({ default: false })
   isPrivate: boolean;

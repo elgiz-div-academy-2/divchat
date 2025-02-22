@@ -4,33 +4,42 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { UserEntity } from 'src/database/entities/User.entity';
 import { DataSource, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
-import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, LoginWithFirebaseDto } from './dto/login.dto';
 import { compare } from 'bcrypt';
 import { ClsService } from 'nestjs-cls';
 import { LoginAttempts } from 'src/database/entities/LoginAttempts.entity';
 import config from 'src/config';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthUtils } from './auth.utils';
+import { FirebaseService } from 'src/libs/firebase/firebase.service';
+import { UserProvider } from 'src/shared/enums/user.enum';
+import { ImageEntity } from 'src/database/entities/Image.entity';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
   private userRepo: Repository<UserEntity>;
   private loginAttemptsRepo: Repository<LoginAttempts>;
+  private imageRepo: Repository<ImageEntity>;
 
   constructor(
     private cls: ClsService,
-    private jwt: JwtService,
     private mailer: MailerService,
+    private authUtils: AuthUtils,
+    private firebaseService: FirebaseService,
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.userRepo = this.dataSource.getRepository(UserEntity);
     this.loginAttemptsRepo = this.dataSource.getRepository(LoginAttempts);
+    this.imageRepo = this.dataSource.getRepository(ImageEntity);
   }
 
   async login(params: LoginDto) {
@@ -64,7 +73,67 @@ export class AuthService {
 
     return {
       user,
-      token: this.generateToken(user.id),
+      token: this.authUtils.generateToken(user.id),
+    };
+  }
+
+  async loginWithFirebase(params: LoginWithFirebaseDto) {
+    let admin = this.firebaseService.firebaseApp;
+
+    let firebaseResult = await admin.auth().verifyIdToken(params.token);
+
+    if (!firebaseResult?.uid)
+      throw new InternalServerErrorException('Something went wrong');
+
+    let uid = firebaseResult.uid;
+    let email = firebaseResult.email;
+
+    let where: FindOptionsWhere<UserEntity>[] = [
+      {
+        providerId: uid,
+        provider: UserProvider.FIREBASE,
+      },
+    ];
+
+    if (email) {
+      where.push({
+        email,
+      });
+    }
+
+    let user = await this.userRepo.findOne({
+      where,
+    });
+
+    if (!user) {
+      let suggestions = await this.usernameSuggestions(firebaseResult.name);
+
+      let image = firebaseResult.picture
+        ? await this.imageRepo.save({
+            url: firebaseResult.picture,
+          })
+        : undefined;
+
+      user = this.userRepo.create({
+        username: suggestions[0],
+        email,
+        password: v4(),
+        provider: UserProvider.FIREBASE,
+        providerId: uid,
+        profile: {
+          fullName: firebaseResult.name,
+          imageId: image?.id,
+        },
+      });
+
+      await user.save();
+    }
+
+    let token = this.authUtils.generateToken(user.id);
+
+    return {
+      user,
+      token,
     };
   }
 
@@ -122,7 +191,7 @@ export class AuthService {
     });
     await user.save();
 
-    let token = this.generateToken(user.id);
+    let token = this.authUtils.generateToken(user.id);
 
     if (email) {
       let mailResult = await this.mailer.sendMail({
@@ -174,6 +243,12 @@ export class AuthService {
   }
 
   async usernameSuggestions(username: string) {
+    username = username
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/^-+|-+$/g, '');
+
     let usernames = Array.from({ length: 8 }).map(
       () => `${username}${Math.floor(Math.random() * 8999) + 1000}`,
     );
@@ -196,7 +271,23 @@ export class AuthService {
     return usernames.slice(0, 2);
   }
 
-  generateToken(userId: number) {
-    return this.jwt.sign({ userId });
+  async resetPassword(params: ResetPasswordDto) {
+    let user = this.cls.get<UserEntity>('user');
+
+    if (params.newPassword !== params.repeatPassword) {
+      throw new BadRequestException('Repeat password is wrong');
+    }
+
+    let checkPassword = await compare(params.currentPassword, user.password);
+
+    if (!checkPassword) throw new BadRequestException('Password is wrong');
+
+    user.password = params.newPassword;
+
+    await user.save();
+
+    return {
+      message: 'Password is updated successfully',
+    };
   }
 }

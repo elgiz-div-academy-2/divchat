@@ -12,3 +12,9 @@ export class LoginDto {
   @MinLength(6)
   password: string;
 }
+
+export class LoginWithFirebaseDto {
+  @Type()
+  @IsString()
+  token: string;
+}
