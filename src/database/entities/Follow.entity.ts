@@ -1,10 +1,12 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './User.entity';
 import { FollowStatus } from 'src/shared/enums/follow.enum';
@@ -28,4 +30,10 @@ export class FollowEntity extends BaseEntity {
 
   @ManyToOne(() => UserEntity, (user) => user.follower)
   to: UserEntity;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
 }

@@ -44,7 +44,17 @@ export class UserService {
   async updateProfile(params: UpdateProfileDto) {
     let user = this.cls.get<UserEntity>('user');
 
-    await this.profileRepo.update({ userId: user.id }, params);
+    if (typeof params.isPrivate === 'boolean') {
+      await this.userRepo.update(
+        { id: user.id },
+        { isPrivate: params.isPrivate },
+      );
+
+      delete params.isPrivate;
+    }
+    if (Object.keys(params).length > 0) {
+      await this.profileRepo.update({ userId: user.id }, params);
+    }
     return {
       message: 'Profile is updated successfully',
     };

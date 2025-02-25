@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+} from 'class-validator';
 
 export class UpdateProfileDto {
   @Type()
@@ -17,5 +23,10 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsUUID()
   @IsString()
-  imageId: string;
+  imageId?: string;
+
+  @Type()
+  @IsOptional()
+  @IsBoolean()
+  isPrivate?: boolean;
 }
