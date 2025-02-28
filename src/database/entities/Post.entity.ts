@@ -27,6 +27,12 @@ export class PostEntity extends BaseEntity {
   @Column()
   content: string;
 
+  @Column({ default: 0 })
+  commentCount: number;
+
+  @Column()
+  userId: number;
+
   @ManyToOne(() => UserEntity, (user) => user.posts, { onDelete: 'CASCADE' })
   user: UserEntity;
 

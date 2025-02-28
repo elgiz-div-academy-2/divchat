@@ -10,8 +10,8 @@ import { PostEntity } from './Post.entity';
 
 @Entity('media')
 export class MediaEntity extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'enum', enum: MediaTypes })
   type: MediaTypes;

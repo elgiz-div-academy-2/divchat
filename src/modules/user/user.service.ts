@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { ProfileEntity } from 'src/database/entities/Profile.entity';
 import { UserEntity } from 'src/database/entities/User.entity';
 import { DataSource, Repository } from 'typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ClsService } from 'nestjs-cls';
+import { FollowService } from './follow/follow.service';
 
 @Injectable()
 export class UserService {
@@ -13,6 +19,8 @@ export class UserService {
 
   constructor(
     private cls: ClsService,
+    @Inject(forwardRef(() => FollowService))
+    private followService: FollowService,
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.userRepo = this.dataSource.getRepository(UserEntity);
@@ -50,6 +58,10 @@ export class UserService {
         { isPrivate: params.isPrivate },
       );
 
+      if (params.isPrivate === false) {
+        await this.followService.acceptPendingRequests();
+      }
+
       delete params.isPrivate;
     }
     if (Object.keys(params).length > 0) {
@@ -58,6 +70,14 @@ export class UserService {
     return {
       message: 'Profile is updated successfully',
     };
+  }
+
+  async incrementCount(
+    userId: number,
+    column: 'follower' | 'following' | 'postCount',
+    value: number = 0,
+  ) {
+    return this.profileRepo.increment({ userId }, column, value);
   }
 
   list() {

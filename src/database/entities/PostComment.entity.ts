@@ -37,13 +37,10 @@ export class PostCommentEntity extends BaseEntity {
   replyId: number;
 
   @ManyToOne(() => PostCommentEntity, (comment) => comment.replies)
+  @JoinColumn({ name: 'replyId' })
   replyTo: PostCommentEntity;
 
   @OneToMany(() => PostCommentEntity, (comment) => comment.replyTo)
-  @JoinColumn({
-    name: 'replyId',
-    referencedColumnName: 'id',
-  })
   replies: PostCommentEntity[];
 
   @CreateDateColumn()

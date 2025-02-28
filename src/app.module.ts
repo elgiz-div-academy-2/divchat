@@ -15,6 +15,9 @@ import { UploadModule } from './modules/upload/upload.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { FollowModule } from './modules/user/follow/follow.module';
+import { MediaModule } from './modules/media/media.module';
+import { PostModule } from './modules/post/post.module';
+import { CommentModule } from './modules/post/comment/comment.module';
 
 @Module({
   imports: [
@@ -89,6 +92,9 @@ import { FollowModule } from './modules/user/follow/follow.module';
     AuthModule,
     FollowModule,
     UploadModule,
+    MediaModule,
+    PostModule,
+    CommentModule,
     JobModule,
   ],
   controllers: [],

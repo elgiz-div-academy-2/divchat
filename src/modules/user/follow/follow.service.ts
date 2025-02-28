@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -28,6 +30,7 @@ export class FollowService {
 
   constructor(
     private cls: ClsService,
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
     @InjectDataSource() private dataSource: DataSource,
   ) {
@@ -85,6 +88,15 @@ export class FollowService {
     });
   }
 
+  async userAccessible(from: number, to: number) {
+    if (from === to) return true;
+    let user = await this.userService.getUser(to);
+    if (!user?.isPrivate) return true;
+    return this.followRepo.exists({
+      where: { fromId: from, toId: to, status: FollowStatus.ACCEPTED },
+    });
+  }
+
   async userFollowings(id: number) {
     let user = this.cls.get<UserEntity>('user');
 
@@ -135,10 +147,10 @@ export class FollowService {
     });
   }
 
-  async pendingRequests() {
+  async pendingRequests(userId?: number) {
     let user = this.cls.get<UserEntity>('user');
     return this.followRepo.find({
-      where: { toId: user.id, status: FollowStatus.PENDING },
+      where: { toId: userId || user.id, status: FollowStatus.PENDING },
       select: {
         id: true,
         from: {
@@ -265,12 +277,22 @@ export class FollowService {
   private updateFollowCounts(from: number, to: number, increment: number) {
     let promises: any = [];
     promises.push(
-      this.profileRepo.increment({ userId: from }, 'following', increment),
+      this.userService.incrementCount(from, 'following', increment),
     );
-    promises.push(
-      this.profileRepo.increment({ userId: to }, 'follower', increment),
-    );
+    promises.push(this.userService.incrementCount(to, 'follower', increment));
 
     return Promise.all(promises);
+  }
+
+  async acceptPendingRequests() {
+    let pendingRequests = await this.pendingRequests();
+
+    let promises = pendingRequests.map((followRequest) =>
+      this.updateFollowStatus({
+        from: followRequest.fromId,
+        status: UpdateFollowStatusEnum.ACCEPT,
+      }),
+    );
+    return await Promise.all(promises);
   }
 }

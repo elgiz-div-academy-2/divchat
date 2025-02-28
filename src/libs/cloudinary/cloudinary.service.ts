@@ -22,6 +22,6 @@ export class CloudinaryService {
         .end(file.buffer),
     );
 
-    return { url: result?.url };
+    return { url: result?.url, type: file.mimetype };
   }
 }
