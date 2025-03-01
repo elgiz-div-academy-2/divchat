@@ -30,7 +30,7 @@ export class AuthGuard implements CanActivate {
       this.cls.set('user', user);
       return true;
     } catch (err) {
-      throw err;
+      throw new UnauthorizedException();
     }
   }
 }

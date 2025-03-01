@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -24,11 +25,11 @@ export class PostEntity extends BaseEntity {
   @Column({ default: 0 })
   view: number;
 
-  @Column()
-  content: string;
-
   @Column({ default: 0 })
   commentCount: number;
+
+  @Column()
+  content: string;
 
   @Column()
   userId: number;

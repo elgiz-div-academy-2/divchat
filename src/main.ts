@@ -19,6 +19,11 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  app.enableCors({
+    origin: ['http://localhost:3001', 'http://localhost:3000'],
+    credentials: true,
+  });
+
   app.use(cookieParser());
 
   const config = new DocumentBuilder()

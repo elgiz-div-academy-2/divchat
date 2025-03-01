@@ -18,6 +18,7 @@ import { FollowModule } from './modules/user/follow/follow.module';
 import { MediaModule } from './modules/media/media.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentModule } from './modules/post/comment/comment.module';
+import { ActionModule } from './modules/post/action/action.module';
 
 @Module({
   imports: [
@@ -90,11 +91,9 @@ import { CommentModule } from './modules/post/comment/comment.module';
     }),
     UserModule,
     AuthModule,
-    FollowModule,
     UploadModule,
     MediaModule,
     PostModule,
-    CommentModule,
     JobModule,
   ],
   controllers: [],

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from 'src/shared/decorators/auth.decorator';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -16,5 +24,10 @@ export class CommentController {
   @Post()
   create(@Param('postId') postId: number, @Body() body: CreateCommentDto) {
     return this.commentService.create(postId, body);
+  }
+
+  @Delete(':commentId')
+  delete(@Param('commentId') commentId: number) {
+    return this.commentService.delete(commentId);
   }
 }

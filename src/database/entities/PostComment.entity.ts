@@ -36,7 +36,9 @@ export class PostCommentEntity extends BaseEntity {
   @Column({ nullable: true })
   replyId: number;
 
-  @ManyToOne(() => PostCommentEntity, (comment) => comment.replies)
+  @ManyToOne(() => PostCommentEntity, (comment) => comment.replies, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'replyId' })
   replyTo: PostCommentEntity;
 

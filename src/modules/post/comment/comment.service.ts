@@ -42,7 +42,7 @@ export class CommentService {
     let page = (params.page || 1) - 1;
     let limit = params.limit;
     return this.commentRepo.find({
-      where: { postId, replyId: 0 },
+      where: { postId, replyId: IsNull() },
       relations: [
         'user',
         'user.profile',
@@ -106,16 +106,48 @@ export class CommentService {
     );
     if (!checkAccess) throw new ForbiddenException('Profile is private');
 
+    if (params.replyId) {
+      let checkReplyComment = await this.commentRepo.exists({
+        where: { id: params.replyId, postId: post.id },
+      });
+      if (!checkReplyComment)
+        throw new NotFoundException('Comment with this reply id is not found');
+    }
+
     let comment = this.commentRepo.create({
       ...params,
+      replyId: params.replyId || undefined,
       postId: post.id,
       userId: user.id,
     });
 
     await comment.save();
 
-    await this.postService.increment(post.id, 1);
+    await this.postService.increment(post.id, 'commentCount', 1);
 
     return comment;
+  }
+
+  async delete(commentId: number) {
+    const user = this.cls.get<UserEntity>('user');
+    let comment = await this.commentRepo.findOne({
+      where: { id: commentId },
+      select: { id: true, userId: true, post: { id: true, userId: true } },
+      relations: ['post'],
+    });
+
+    if (!comment) throw new NotFoundException('Comment is not found');
+
+    if (user.id !== comment.userId && user.id !== comment.post.userId) {
+      throw new ForbiddenException('You cannot do this action');
+    }
+
+    await this.commentRepo.delete({ id: commentId });
+
+    await this.postService.increment(comment.post.id, 'commentCount', -1);
+
+    return {
+      message: 'Comment is deleted successfully',
+    };
   }
 }

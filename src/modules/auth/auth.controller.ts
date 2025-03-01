@@ -13,7 +13,11 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: LoginDto, @Res() res: Response) {
     let result = await this.authService.login(body);
-    res.cookie('authorization', result.token);
+    res.cookie('authorization', result.token, {
+      sameSite: 'none',
+      httpOnly: true,
+      secure: true,
+    });
 
     res.json(result);
   }
@@ -24,7 +28,11 @@ export class AuthController {
     @Res() res: Response,
   ) {
     let result = await this.authService.loginWithFirebase(body);
-    res.cookie('authorization', result.token);
+    res.cookie('authorization', result.token, {
+      sameSite: 'none',
+      httpOnly: true,
+      secure: true,
+    });
 
     res.json(result);
   }

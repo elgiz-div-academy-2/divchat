@@ -5,17 +5,22 @@ import {
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { PostEntity } from 'src/database/entities/Post.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { ClsService } from 'nestjs-cls';
 import { UserEntity } from 'src/database/entities/User.entity';
 import { UserService } from '../user/user.service';
 import { FollowService } from '../user/follow/follow.service';
 import { UserPostsQueryDto } from './dto/uesr-posts.dto';
+import { FollowStatus } from 'src/shared/enums/follow.enum';
+import { PaginationDto } from 'src/shared/dto/pagniation.dto';
+import { PostActionsEntity } from 'src/database/entities/PostAction.entity';
+import { PostActionTypes } from 'src/shared/enums/post.enum';
 
 @Injectable()
 export class PostService {
   private postRepo: Repository<PostEntity>;
+  private actionRepo: Repository<PostActionsEntity>;
 
   constructor(
     private cls: ClsService,
@@ -24,6 +29,7 @@ export class PostService {
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.postRepo = this.dataSource.getRepository(PostEntity);
+    this.actionRepo = this.dataSource.getRepository(PostActionsEntity);
   }
 
   async findOne(id: number, relations: string[] = []) {
@@ -81,7 +87,72 @@ export class PostService {
     return post;
   }
 
-  async increment(postId: number, value: number = 0) {
-    return this.postRepo.increment({ id: postId }, 'commentCount', value);
+  async increment(
+    postId: number,
+    column: 'view' | 'like' | 'commentCount',
+    value: number = 0,
+  ) {
+    return this.postRepo.increment({ id: postId }, column, value);
+  }
+
+  async feed(params: PaginationDto) {
+    let user = this.cls.get<UserEntity>('user');
+
+    let page = (params.page || 1) - 1;
+    let limit = params.limit;
+
+    let posts = await this.postRepo.find({
+      where: {
+        user: {
+          follower: {
+            fromId: user.id,
+            status: FollowStatus.ACCEPTED,
+          },
+        },
+      },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        like: true,
+        view: true,
+        commentCount: true,
+        media: {
+          id: true,
+          url: true,
+          type: true,
+        },
+        user: {
+          id: true,
+          username: true,
+          profile: {
+            id: true,
+            image: {
+              id: true,
+              url: true,
+            },
+          },
+        },
+      },
+      relations: ['media', 'user', 'user.profile', 'user.profile.image'],
+      order: {
+        createdAt: 'DESC',
+      },
+      skip: page * limit,
+      take: limit,
+    });
+
+    let actions = await this.actionRepo.find({
+      where: {
+        postId: In(posts.map((post) => post.id)),
+        userId: user.id,
+        type: PostActionTypes.LIKE,
+      },
+    });
+
+    return posts.map((post) => ({
+      ...post,
+      is_liked: actions.some((action) => action.postId === post.id),
+    }));
   }
 }
