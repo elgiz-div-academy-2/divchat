@@ -7,7 +7,7 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { ProfileEntity } from 'src/database/entities/Profile.entity';
 import { UserEntity } from 'src/database/entities/User.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ClsService } from 'nestjs-cls';
 import { FollowService } from './follow/follow.service';
@@ -29,6 +29,10 @@ export class UserService {
 
   getUser(id: number) {
     return this.userRepo.findOne({ where: { id } });
+  }
+
+  getUsers(ids: number[]) {
+    return this.userRepo.find({ where: { id: In(ids) } });
   }
 
   async getPublicProfile(userId?: number) {

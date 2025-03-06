@@ -14,11 +14,9 @@ import { JobModule } from './jobs/job.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { FollowModule } from './modules/user/follow/follow.module';
 import { MediaModule } from './modules/media/media.module';
 import { PostModule } from './modules/post/post.module';
-import { CommentModule } from './modules/post/comment/comment.module';
-import { ActionModule } from './modules/post/action/action.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -94,6 +92,7 @@ import { ActionModule } from './modules/post/action/action.module';
     UploadModule,
     MediaModule,
     PostModule,
+    ChatModule,
     JobModule,
   ],
   controllers: [],

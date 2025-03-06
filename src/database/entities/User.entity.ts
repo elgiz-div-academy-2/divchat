@@ -16,6 +16,7 @@ import { PostEntity } from './Post.entity';
 import { PostActionsEntity } from './PostAction.entity';
 import * as bcrypt from 'bcrypt';
 import { UserProvider } from 'src/shared/enums/user.enum';
+import { ChatEntity } from './Chat.entity';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
