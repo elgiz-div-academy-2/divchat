@@ -18,7 +18,8 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     let req = context.switchToHttp().getRequest();
 
-    const token = req.cookies.authorization;
+    let token = req.cookies.authorization || req.headers.authorization;
+    token = token?.split(' ')?.[1] || token;
     try {
       let payload = this.jwt.verify(token);
 

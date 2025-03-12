@@ -17,6 +17,7 @@ import { ChatParticipant } from 'src/database/entities/Participant.entity';
 import { MessageEntity } from 'src/database/entities/Message.entity';
 import { MessageService } from './message/message.service';
 import { UpdateChatGroupDto } from './dto/update-chat.dto';
+import { SocketGateway } from '../socket/socket.gateway';
 
 @Injectable()
 export class ChatService {
@@ -29,6 +30,7 @@ export class ChatService {
     private messageService: MessageService,
     private userService: UserService,
     private cls: ClsService,
+    private socketGateway: SocketGateway,
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.chatRepo = this.dataSource.getRepository(ChatEntity);
@@ -90,6 +92,57 @@ export class ChatService {
         chat.participants.find((participant) => participant.user.id === user.id)
           ?.unreadCount || 0,
     }));
+  }
+  async getItem(id: number) {
+    let user = this.cls.get<UserEntity>('user');
+
+    const chat = await this.chatRepo
+      .createQueryBuilder('chat')
+      .leftJoin('chat.participants', 'myParticipant')
+      .leftJoinAndSelect('chat.participants', 'participants')
+      .leftJoinAndSelect('participants.user', 'user')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('profile.image', 'image')
+      .leftJoinAndSelect('chat.lastMessage', 'lastMessage')
+      .leftJoinAndSelect('lastMessage.user', 'lastMessageUser')
+      .leftJoinAndSelect('lastMessageUser.profile', 'lastMessageProfile')
+      .leftJoinAndSelect('lastMessageProfile.image', 'lastMessageImage')
+      .where('myParticipant.userId = :userId', { userId: user.id })
+      .andWhere(`chat.id =:id`, { id })
+      .select([
+        'chat.id',
+        'chat.name',
+        'chat.isGroup',
+        'chat.createdAt',
+        'chat.updatedAt',
+        'chat.adminId',
+        'participants.id',
+        'participants.unreadCount',
+        'user.id',
+        'user.username',
+        'profile.id',
+        'image.id',
+        'image.url',
+        'lastMessage.id',
+        'lastMessage.content',
+        'lastMessage.createdAt',
+        'lastMessageUser.id',
+        'lastMessageUser.username',
+        'lastMessageProfile.id',
+        'lastMessageImage.id',
+        'lastMessageImage.url',
+      ])
+      .orderBy('chat.updatedAt', 'DESC')
+      .getOne();
+
+    if (!chat) throw new NotFoundException('error');
+
+    return {
+      ...chat,
+      unreadCount:
+        chat.participants.find((participant) => participant.user.id === user.id)
+          ?.unreadCount || 0,
+    };
   }
 
   async createChat(params: CreateChatDto) {

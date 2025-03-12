@@ -14,6 +14,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { ChatService } from '../chat.service';
 import { ChatParticipant } from 'src/database/entities/Participant.entity';
 import { ChatEntity } from 'src/database/entities/Chat.entity';
+import { SocketGateway } from 'src/modules/socket/socket.gateway';
 
 @Injectable()
 export class MessageService {
@@ -24,6 +25,7 @@ export class MessageService {
     @Inject(forwardRef(() => ChatService))
     private chatService: ChatService,
     private cls: ClsService,
+    private socketGateway: SocketGateway,
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.messageRepo = this.dataSource.getRepository(MessageEntity);
@@ -92,9 +94,16 @@ export class MessageService {
 
     await message.save();
 
+    let rooms = this.socketGateway.server.to(
+      chat.participants.map((participant) => `user_${participant.userId}`),
+    );
+    rooms.emit('message-created', { id: message.id });
+
     chat.lastMessage = message;
 
     await chat.save();
+
+    rooms.emit('chat-updated', { id: chat.id });
 
     await this.participantRepo.increment(
       { chatId: chat.id, userId: Not(user.id) },

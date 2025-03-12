@@ -17,6 +17,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { MediaModule } from './modules/media/media.module';
 import { PostModule } from './modules/post/post.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { SocketModule } from './modules/socket/socket.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { ChatModule } from './modules/chat/chat.module';
     PostModule,
     ChatModule,
     JobModule,
+    SocketModule,
   ],
   controllers: [],
   providers: [AppService],

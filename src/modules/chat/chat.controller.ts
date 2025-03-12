@@ -14,6 +14,11 @@ export class ChatController {
     return this.chatService.myChatList();
   }
 
+  @Get(':id')
+  getChat(@Param('id') id: number) {
+    return this.chatService.getItem(id);
+  }
+
   @Post()
   createChat(@Body() body: CreateChatDto) {
     return this.chatService.createChat(body);

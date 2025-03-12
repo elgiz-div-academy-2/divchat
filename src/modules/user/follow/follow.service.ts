@@ -22,6 +22,7 @@ import {
   UpdateFollowStatusEnum,
 } from 'src/shared/enums/follow.enum';
 import { ProfileEntity } from 'src/database/entities/Profile.entity';
+import { SocketGateway } from 'src/modules/socket/socket.gateway';
 
 @Injectable()
 export class FollowService {
@@ -33,6 +34,7 @@ export class FollowService {
     @Inject(forwardRef(() => UserService))
     private userService: UserService,
     @InjectDataSource() private dataSource: DataSource,
+    private socketGateway: SocketGateway,
   ) {
     this.followRepo = this.dataSource.getRepository(FollowEntity);
     this.profileRepo = this.dataSource.getRepository(ProfileEntity);
@@ -201,6 +203,10 @@ export class FollowService {
       await this.followRepo.save(followRequest);
 
       isNew = true;
+
+      this.socketGateway.server
+        .to(`user_${toUser.id}`)
+        .emit('follow-request', followRequest);
     }
 
     if (followRequest.status === FollowStatus.PENDING) {
@@ -242,6 +248,10 @@ export class FollowService {
         { id: followRequest.id },
         { status: FollowStatus.ACCEPTED },
       );
+
+      this.socketGateway.server
+        .to(`user_${fromUser.id}`)
+        .emit('follow-request-accepted', followRequest);
 
       await this.updateFollowCounts(fromUser.id, user.id, 1);
 
