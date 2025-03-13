@@ -3,7 +3,7 @@ import { extname } from 'path';
 import {
   UPLOAD_MEDIA_ALLOWED_MIME_TYPES,
   UPLOAD_MEDIA_ALLOWED_TYPES,
-} from 'src/shared/constants/media.constants';
+} from '../../shared/constants/media.constants';
 
 export const mediaFileFilter = (
   req: Request,

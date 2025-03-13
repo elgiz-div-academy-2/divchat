@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { ProfileEntity } from 'src/database/entities/Profile.entity';
-import { UserEntity } from 'src/database/entities/User.entity';
+import { ProfileEntity } from '../../database/entities/Profile.entity';
+import { UserEntity } from '../../database/entities/User.entity';
 import { DataSource, In, Repository } from 'typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ClsService } from 'nestjs-cls';

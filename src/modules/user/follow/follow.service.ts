@@ -15,14 +15,14 @@ import {
   UpdateFollowStatusDto,
 } from './dto/send-follow.dto';
 import { ClsService } from 'nestjs-cls';
-import { UserEntity } from 'src/database/entities/User.entity';
-import { FollowEntity } from 'src/database/entities/Follow.entity';
+import { UserEntity } from '../../../database/entities/User.entity';
+import { FollowEntity } from '../../../database/entities/Follow.entity';
 import {
   FollowStatus,
   UpdateFollowStatusEnum,
-} from 'src/shared/enums/follow.enum';
-import { ProfileEntity } from 'src/database/entities/Profile.entity';
-import { SocketGateway } from 'src/modules/socket/socket.gateway';
+} from '../../../shared/enums/follow.enum';
+import { ProfileEntity } from '../../../database/entities/Profile.entity';
+import { SocketGateway } from '../../../modules/socket/socket.gateway';
 
 @Injectable()
 export class FollowService {

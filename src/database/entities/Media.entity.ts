@@ -1,4 +1,4 @@
-import { MediaTypes } from 'src/shared/enums/media.enum';
+import { MediaTypes } from '../../shared/enums/media.enum';
 import {
   BaseEntity,
   Column,

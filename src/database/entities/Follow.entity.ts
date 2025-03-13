@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './User.entity';
-import { FollowStatus } from 'src/shared/enums/follow.enum';
+import { FollowStatus } from '../../shared/enums/follow.enum';
 
 @Entity('follows')
 export class FollowEntity extends BaseEntity {

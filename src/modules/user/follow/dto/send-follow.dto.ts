@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsPositive, Min } from 'class-validator';
-import { UpdateFollowStatusEnum } from 'src/shared/enums/follow.enum';
+import { UpdateFollowStatusEnum } from '../../../../shared/enums/follow.enum';
 
 export class ToggleFollowRequestDto {
   @Type()

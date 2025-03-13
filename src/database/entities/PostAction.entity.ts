@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from './User.entity';
-import { PostActionTypes } from 'src/shared/enums/post.enum';
+import { PostActionTypes } from '../../shared/enums/post.enum';
 import { PostEntity } from './Post.entity';
 
 @Entity('post_actions')
