@@ -18,6 +18,10 @@ import { MediaModule } from './modules/media/media.module';
 import { PostModule } from './modules/post/post.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { SocketModule } from './modules/socket/socket.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv, Keyv } from '@keyv/redis';
+import { CacheableMemory } from 'cacheable';
+import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -87,6 +91,21 @@ import { SocketModule } from './modules/socket/socket.module';
           },
         };
       },
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => {
+        const store = await redisStore({
+          socket: {
+            url: config.get('REDIS_URL'),
+          },
+        });
+        return {
+          store: () => store,
+        };
+      },
+      inject: [ConfigService],
     }),
     UserModule,
     AuthModule,

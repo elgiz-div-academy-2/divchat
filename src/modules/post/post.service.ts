@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -16,6 +17,8 @@ import { FollowStatus } from 'src/shared/enums/follow.enum';
 import { PaginationDto } from 'src/shared/dto/pagniation.dto';
 import { PostActionsEntity } from 'src/database/entities/PostAction.entity';
 import { PostActionTypes } from 'src/shared/enums/post.enum';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class PostService {
@@ -26,6 +29,7 @@ export class PostService {
     private cls: ClsService,
     private followService: FollowService,
     private userService: UserService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectDataSource() private dataSource: DataSource,
   ) {
     this.postRepo = this.dataSource.getRepository(PostEntity);
@@ -53,6 +57,11 @@ export class PostService {
     let page = (params.page || 1) - 1;
     let limit = params.limit || 10;
 
+    if (page === 0) {
+      let cacheData = await this.cacheManager.get(`userPosts_${userId}`);
+      if (cacheData) return { cache: true, ...cacheData };
+    }
+
     let [posts, total] = await this.postRepo.findAndCount({
       where: {
         userId,
@@ -65,10 +74,15 @@ export class PostService {
       take: limit,
     });
 
-    return {
+    let result = {
       posts,
       total,
     };
+
+    if (page === 0) {
+      await this.cacheManager.set(`userPosts_${userId}`, result);
+    }
+    return result;
   }
 
   async create(params: CreatePostDto) {
@@ -83,6 +97,8 @@ export class PostService {
     await post.save();
 
     await this.userService.incrementCount(user.id, 'postCount', 1);
+
+    await this.cacheManager.del(`userPosts_${user.id}`);
 
     return post;
   }
